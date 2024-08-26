@@ -1,24 +1,22 @@
 steps:
-  - name: 'python:3.10-slim'
+  - name: 'gcr.io/buildpacks/builder'
     id: 'build'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        # Install dependencies
-        pip install -r requirements.txt
+        # Build the application using buildpacks
+        pack build my-flask-app --builder gcr.io/buildpacks/builder:v1
 
-        # Run tests or other commands (optional)
-        # ...
-
-        # Build the Docker image
-        docker build -t gcr.io/$PROJECT_ID/flask-app .
-
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'push'
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy'
+    entrypoint: 'bash'
     args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/flask-app'
-
-images:
-  - 'gcr.io/$PROJECT_ID/flask-app'
+      - '-c'
+      - |
+        # Deploy the application to Google Cloud Run
+        gcloud run deploy my-flask-app \
+          --image gcr.io/$PROJECT_ID/my-flask-app \
+          --platform managed \
+          --region us-central1 \
+          --allow-unauthenticated
